@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #999999;
+    color: rgb(15, 15, 15);
+}
+
+#navbar {
+    width: 100%;
+}
+
+.navbar {
+    background-color: #1d1d1d !important;
+    color: white;
+}
+
+#banner {
+    margin-top: 0;
+}
