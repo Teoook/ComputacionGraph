@@ -1,19 +1,51 @@
 body {
     margin: 0;
     padding: 0;
-    background-color: #999999;
-    color: rgb(15, 15, 15);
+    background-color: #1b1b1b;
+    color: rgb(0, 0, 0);
 }
 
 #navbar {
     width: 100%;
+
 }
 
 .navbar {
-    background-color: #1d1d1d !important;
+    background-color: #111111 !important;
+    color: rgb(0, 0, 0);
+}
+#banner {
+    background-color: #130000; /* rojo marica */
+    padding: 100px 0;
+}
+
+.banner-contenido {
+    width: 85%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.banner-texto {
     color: white;
 }
 
-#banner {
-    margin-top: 0;
+.banner-texto h1 {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin: 0;
+}
+
+.linea {
+    width: 650px;
+    height: 4px;
+    background-color: white;
+    margin-top: 10px;
+}
+
+.banner-imagen img {
+    width: 380px;
+    max-width: 100%;
 }
