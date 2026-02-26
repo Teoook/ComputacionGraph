@@ -40,7 +40,7 @@ const grid = new THREE.GridHelper(
 
 scene.add(grid);
 
-// Cámara
+// Camara (corregir parte camara)
 const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -61,7 +61,8 @@ controls.enableDamping = true;
 // Grupo casa
 const house = new THREE.Group();
 
-// Base
+// Casa en orden
+
 const base = new THREE.Mesh(
     new THREE.BoxGeometry(2, 2, 2),
     new THREE.MeshBasicMaterial({ color: 0x8B4513 })
@@ -69,7 +70,7 @@ const base = new THREE.Mesh(
 base.position.y = 1;
 house.add(base);
 
-// Techo
+
 const roof = new THREE.Mesh(
     new THREE.ConeGeometry(1.5, 1, 4),
     new THREE.MeshBasicMaterial({ color: 0xAA0000 })
@@ -78,7 +79,7 @@ roof.position.y = 2.5;
 roof.rotation.y = Math.PI / 4;
 house.add(roof);
 
-// Puerta
+
 const door = new THREE.Mesh(
     new THREE.BoxGeometry(0.6, 1, 0.1),
     new THREE.MeshBasicMaterial({ color: 0x3E2723 })
