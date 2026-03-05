@@ -64,7 +64,7 @@ function getBuildingData() {
     for(var i = 0; i < numBuildings; i++){
 
         var message2 = 'Ingresate cuantos, color(hex) y wireframe del edificio #' + (i+1);
-        var datas2 = prompt(message2,"3,ff0000,false");
+        var datas2 = prompt(message2,"3,292929,false");
 
         var values = datas2.split(',');
 
@@ -75,7 +75,7 @@ function getBuildingData() {
         drawElement(pisos, color, wireframe, i);
 
     }
-
+    // corregido
 }
 
 function drawElement(pisos, color, wireframe, index) {
@@ -101,7 +101,7 @@ function drawElement(pisos, color, wireframe, index) {
         scene.add(piso);
 
 
-        // Ventanas (detalle)
+        // Ventanas
         var ventanaGeo = new THREE.PlaneGeometry(0.5,0.5);
         var ventanaMat = new THREE.MeshBasicMaterial({
             color: 0x87ceeb,
