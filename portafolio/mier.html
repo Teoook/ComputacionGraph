@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THREE JS - Parcial 2026</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- three -->
+    <script type="text/javascript" src="../js/libs/three.js"></script>
+    <!-- orbit controls -->
+    <script type="text/javascript" src="../js/libs/OrbitControls.js"></script>
+    <!-- main -->
+    <script type="text/javascript" src="../js/nomain.js"></script>
+
+</head>
+
+<body onload="start()">
+    <canvas id="app"></canvas>
+    <div style="position: absolute; top: 20px; left: 20px; z-index: 100;">
+        <button onclick="getBuildingData()" style="padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px;">
+            Crear Edificios
+        </button>
+    </div>
+
+</body>
+
+</html>
