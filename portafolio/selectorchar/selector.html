@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Viewer</title>
+
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.2.0/model-viewer.min.js"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: sans-serif;
+    background: #111;
+    color: white;
+}
+
+/* Layout */
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+/* LEFT */
+.sidebar {
+    width: 220px;
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+}
+
+/* botones modelos */
+.model-btn {
+    height: 80px;
+    border: none;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: 0.3s;
+}
+
+.model-btn:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.model-btn.active {
+    opacity: 1;
+    outline: 2px solid #4c8ee1;
+}
+
+/* RIGHT */
+.viewer {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+model-viewer {
+    width: 90%;
+    height: 90%;
+    background: #000;
+    border-radius: 12px;
+    transition: opacity 0.2s ease;
+}
+
+/* botón volver */
+.back-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 999px;
+    background: #4c8ee1;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.back-btn:hover {
+    background: #6aa4f5;
+}
+</style>
+</head>
+
+<body>
+
+<button class="back-btn" onclick="goBack()">Volver</button>
+
+<div class="container">
+
+    <!-- IZQUIERDA -->
+    <div class="sidebar">
+
+        <button class="model-btn active"
+            style="background-image:url('../../src/img/pantalla.png')"
+            onclick="switchModel(this,'pantallaemierda')">
+        </button>
+
+        <button class="model-btn"
+            style="background-image:url('../../src/img/sofa.png')"
+            onclick="switchModel(this,'sofademierda')">
+        </button>
+
+    </div>
+
+    <!-- DERECHA -->
+    <div class="viewer">
+        <model-viewer 
+            id="viewer"
+            src="../../src/models/glb/pantallaemierda.glb"
+            camera-controls
+            shadow-intensity="1">
+        </model-viewer>
+    </div>
+
+</div>
+
+<script>
+const viewer = document.getElementById("viewer");
+
+function switchModel(el, name){
+    viewer.style.opacity = 0;
+
+    setTimeout(() => {
+        viewer.src = "../../src/models/glb/" + name + ".glb";
+        viewer.style.opacity = 1;
+    }, 150);
+
+    document.querySelectorAll(".model-btn")
+        .forEach(b => b.classList.remove("active"));
+
+    el.classList.add("active");
+}
+
+function goBack(){
+    window.location.href = "../menupeye/inedxmenu.html";
+}
+</script>
+
+</body>
+</html>

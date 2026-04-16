@@ -63,9 +63,12 @@ body {
     </div>
     <div class="nav-items">
         <div class="active-pill" id="active-pill"></div>
-        <button class="nav-btn active" data-name="home" data-url="/portafolio/model.html">Characters</button>
-        <button class="nav-btn" data-name="call" data-url="/call.html">Call</button>
-        <button class="nav-btn" data-name="list" data-url="/index.html">Exit</button>
+
+        <button class="nav-btn active" data-name="home" data-url="/portafolio/model.html">New Game</button>
+        <button class="nav-btn" data-name="call" data-url="/portafolio/selectorchar/selector.html">Characters</button>
+        <button class="nav-btn" data-name="list" data-url="/index.html">Settings</button>
+        <button class="nav-btn" data-name="exit" data-url="/index.html">Exit</button>
+
     </div>
 </nav>
 
@@ -81,18 +84,41 @@ const audio = document.getElementById("bg-music");
 
 // AUDIO
 audio.volume = 0.2;
-function startMusic() { audio.play().catch(()=>{}); document.removeEventListener("click", startMusic); }
+function startMusic() {
+    audio.play().catch(()=>{});
+    document.removeEventListener("click", startMusic);
+}
 document.addEventListener("click", startMusic);
 
 // PILLS
-function updatePill(btn) { activePill.style.width = `${btn.offsetWidth}px`; activePill.style.transform = `translateX(${btn.offsetLeft}px)`; }
+function updatePill(btn) {
+    activePill.style.width = `${btn.offsetWidth}px`;
+    activePill.style.transform = `translateX(${btn.offsetLeft}px)`;
+}
 updatePill(document.querySelector(".active"));
 
 // BLOBS ANIMADOS
-const blobs = [document.querySelector('.blob-1'), document.querySelector('.blob-2'), document.querySelector('.blob-3')];
-function randomColor() { const r=100+Math.floor(Math.random()*156), g=100+Math.floor(Math.random()*156), b=100+Math.floor(Math.random()*156); return `rgb(${r},${g},${b})`; }
-function animateBlobs(){ blobs.forEach(b=>{ b.style.transition='background 10s linear'; b.style.background=randomColor(); }); }
-setInterval(animateBlobs, 10000); animateBlobs();
+const blobs = [
+    document.querySelector('.blob-1'),
+    document.querySelector('.blob-2'),
+    document.querySelector('.blob-3')
+];
+
+function randomColor() {
+    const r=100+Math.floor(Math.random()*156),
+          g=100+Math.floor(Math.random()*156),
+          b=100+Math.floor(Math.random()*156);
+    return `rgb(${r},${g},${b})`;
+}
+
+function animateBlobs(){
+    blobs.forEach(b=>{
+        b.style.transition='background 10s linear';
+        b.style.background=randomColor();
+    });
+}
+setInterval(animateBlobs, 10000);
+animateBlobs();
 
 // GLARE
 document.getElementById("nav").addEventListener("mousemove", e=>{
@@ -101,7 +127,7 @@ document.getElementById("nav").addEventListener("mousemove", e=>{
     glare.style.setProperty("--y", `${e.clientY-rect.top}px`);
 });
 
-// DOBLE CLICK GENÉRICO
+// DOBLE CLICK
 let lastClicked = null;
 let clickCount = 0;
 
@@ -119,8 +145,23 @@ navButtons.forEach(btn => {
         }
 
         if (clickCount === 2) {
+            const name = btn.dataset.name;
             const url = btn.dataset.url;
-            if (url) window.location.href = url;
+
+            if (name === "exit") {
+                audio.pause();
+                audio.currentTime = 0;
+
+                // intenta cerrar (solo funciona si fue abierta por script)
+                window.close();
+
+                // fallback: redirigir
+                setTimeout(() => {
+                    window.location.href = "/index.html";
+                }, 300);
+            } else if (url) {
+                window.location.href = url;
+            }
         }
     });
 });
