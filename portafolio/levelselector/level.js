@@ -210,7 +210,7 @@ cameraFolder3.open();
 // ***** ANIMATE ***********
 function animate() {
 
-    requestAnimationFrame(animate);
+    // requestAnimationFrame(animate);
 
     timer.update();
     stats.update();
