@@ -1,42 +1,51 @@
 // ----------------------------
-// Inicialización de Variables:
+// Variables globales
 // ----------------------------
-var scene = null,
-  camera = null,
-  renderer = null,
-  controls = null,
-  clock = null;
+var scene = null;
+var camera = null;
+var renderer = null;
+var clock = null;
 
-var sound1 = null,
-  countPoints = null,
-  modelLoad = null,
-  light = null,
-  figuresGeo = [];
+var sound1 = null;
+var light = null;
+var island = null;
 
-var MovingCube = null,
-  collidableMeshList = [],
-  lives = 3,
-  numberToCreate = 5;
+var MovingCube = null;
+var collidableMeshList = [];
 
-var color = new THREE.Color();
+var Ducks = [];
 
-var scale = 1;
+var lives = 3;
+var attackDuck = false;
+
+// --- Escalado suave ---
+var targetScale = 0.3;           // escala objetivo (normal/ataque)
+var currentScale = 0.3;          // valor interpolado actual
+var lerpSpeed = 0.08;            // qué tan rápido se hace la transición
+
 var rotSpd = 0.05;
 var spd = 0.05;
-var input = { left: 0, right: 0, up: 0, down: 0 };
+
+var input = {
+  left: 0,
+  right: 0,
+  up: 0,
+  down: 0
+};
 
 var posX = 3;
 var posY = 0.5;
 var posZ = 1;
 
-var position1 = [-1,0,6],
-    position2 = [11,0,6],
-    position3 = [-1,0,-6],
-    position4 = [11,0,-6];
+var position1 = [-1,0,6];
+var position2 = [11,0,6];
+var position3 = [-1,0,-6];
+var position4 = [11,0,-6];
 
-var Ducks = [];
+var timerInterval = null;  // Para controlar el intervalo del timer
+
 // ----------------------------
-// Funciones de creación init:
+// Inicio
 // ----------------------------
 function start() {
   window.onresize = onWindowResize;
@@ -45,33 +54,22 @@ function start() {
 }
 
 function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  if (camera && renderer) {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
 }
 
 function initScene() {
-  initBasicElements(); // Scene, Camera and Render
-  initSound();         // To generate 3D Audio
-  createLight();       // Create light
+  initBasicElements();
+  initSound();
+  createLight();
+  createIsland();
   initWorld();
   createPlayerMove();
-  createFrontera();
-}
 
-function animate() {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-  sound1.update(camera);
-  movePlayer();
-  collisionAnimate();
-
-  if(Ducks.length>0){
-    Ducks[0].position.x+=0.01
-    Ducks[1].position.z-=0.01;
-    Ducks[2].position.z+=0.01;
-    Ducks[3].position.x-=0.01;
-  }
+  document.getElementById("lives").innerHTML = lives;
 }
 
 function initBasicElements() {
@@ -80,123 +78,88 @@ function initBasicElements() {
   renderer = new THREE.WebGLRenderer({ canvas: document.querySelector("#app") });
   clock = new THREE.Clock();
 
-  // controls = new THREE.OrbitControls(camera, renderer.domElement);
-  // controls.update();
-
   scene.background = new THREE.Color(0x0099ff);
-  scene.fog = new THREE.Fog(0xffffff, 0, 750);
-
-  var light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 0.75);
-  light.position.set(0.5, 1, 0.75);
-  scene.add(light);
-
   renderer.setSize(window.innerWidth, window.innerHeight - 4);
-  document.body.appendChild(renderer.domElement);
-
-  camera.position.x = 3;
-  camera.position.y = 0.5;
-  camera.position.z = 1;
+  camera.position.set(posX, posY, posZ);
 }
 
 function initSound() {
-  sound1 = new Sound(["./songs/rain.mp3"], 500, scene, {   // radio(10)
+  sound1 = new Sound(["./songs/rain.mp3"], 500, scene, {
     debug: true,
     position: { x: camera.position.x, y: camera.position.y + 10, z: camera.position.z }
   });
 }
 
-function createFistModel(generalPath, pathMtl, pathObj) {
+// ----------------------------
+// Isla (OBJ + MTL)
+// ----------------------------
+function createIsland() {
   var mtlLoader = new THREE.MTLLoader();
-  mtlLoader.setTexturePath(generalPath);
-  mtlLoader.setPath(generalPath);
-  mtlLoader.load(pathMtl, function (materials) {
+  mtlLoader.setTexturePath("./modelos/island/");
+  mtlLoader.setPath("./modelos/island/");
 
+  mtlLoader.load("littleisle.mtl", function(materials) {
     materials.preload();
-
     var objLoader = new THREE.OBJLoader();
     objLoader.setMaterials(materials);
-    objLoader.setPath(generalPath);
-    objLoader.load(pathObj, function (object) {
+    objLoader.setPath("./modelos/island/");
 
-      modelLoad = object;
-      figuresGeo.push(modelLoad);
-      scene.add(object);
-      object.scale.set(0.1, 0.1, 0.1);
-
-      object.position.y = 0;
-      object.position.x = 5;
-
+    objLoader.load("littleisle.obj", function(object) {
+      island = object;
+      island.position.set(5, -2, 0);
+      island.scale.set(0.5, 0.5, 0.5);
+      scene.add(island);
     });
-
   });
 }
 
-function createGltfFunction(generalPath, pathGltf, position,indice, scale) {
-  // Instantiate a loader
+// ----------------------------
+// Crear patos
+// ----------------------------
+function createDuck(position, indice, scale) {
   const loader = new THREE.GLTFLoader();
-
-  console.log("This is my Duck "+indice);
-  // Optional: Provide a DRACOLoader instance to decode compressed mesh data
   const dracoLoader = new THREE.DRACOLoader();
-  dracoLoader.setDecoderPath(generalPath);//'/examples/js/libs/draco/'
+  dracoLoader.setDecoderPath("./modelos/other/");
   loader.setDRACOLoader(dracoLoader);
 
-  // Load a glTF resource
-  loader.load(
-    // resource URL
-    pathGltf,//'models/gltf/duck/duck.gltf',
-    // called when the resource is loaded
-    function (gltf) {
-
-      Ducks[indice] = gltf.scene;
-      scene.add(gltf.scene);
-
-      gltf.animations; // Array<THREE.AnimationClip>
-      gltf.scene; // THREE.Group
-      gltf.scenes; // Array<THREE.Group>
-      gltf.cameras; // Array<THREE.Camera>
-      gltf.asset; // Object
-
-      gltf.scene.scale.set(scale,scale,scale);
-      gltf.scene.position.set(position[0],position[1],position[2]);
-
-    },
-    // called while loading is progressing
-    function (xhr) {
-
-      console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-
-    },
-    // called when loading has errors
-    function (error) {
-
-      console.log('An error happened');
-
-    }
-  );
-}
-
-function createLight() {
-  var light2 = new THREE.AmbientLight(0xffffff);
-  light2.position.set(10, 10, 10);
-  scene.add(light2);
-  light = new THREE.DirectionalLight(0xffffff, 0, 1000);
-  scene.add(light);
+  loader.load("./modelos/other/Duck.gltf", function(gltf) {
+    Ducks[indice] = gltf.scene;
+    scene.add(gltf.scene);
+    gltf.scene.scale.set(scale, scale, scale);
+    gltf.scene.position.set(position[0], position[1], position[2]);
+  });
 }
 
 function initWorld() {
-  // Create Island
-  
-  var positionFather = [position1,position2,position3,position4];
-
-  for (var i = 0; i < 4; i++) {
-    createGltfFunction("./modelos/other/", "./modelos/other/Duck.gltf",positionFather[i],i,0.3);
-  }
-
+  createDuck(position1, 0, 0.3);
+  createDuck(position2, 1, 0.3);
+  createDuck(position3, 2, 0.3);
+  createDuck(position4, 3, 0.3);
 }
-// ----------------------------------
-// Función Para mover al jugador:
-// ----------------------------------
+
+// ----------------------------
+function createLight() {
+  var ambient = new THREE.AmbientLight(0xffffff);
+  scene.add(ambient);
+  light = new THREE.DirectionalLight(0xffffff, 1);
+  scene.add(light);
+}
+
+// ----------------------------
+function createPlayerMove() {
+  var cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+  var wireMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0
+  });
+  MovingCube = new THREE.Mesh(cubeGeometry, wireMaterial);
+  MovingCube.position.copy(camera.position);
+  scene.add(MovingCube);
+}
+
+// ----------------------------
 function movePlayer() {
   if (input.right == 1) {
     camera.rotation.y -= rotSpd;
@@ -206,124 +169,139 @@ function movePlayer() {
     camera.rotation.y += rotSpd;
     MovingCube.rotation.y += rotSpd;
   }
-
   if (input.up == 1) {
     camera.position.z -= Math.cos(camera.rotation.y) * spd;
     camera.position.x -= Math.sin(camera.rotation.y) * spd;
-
     MovingCube.position.z -= Math.cos(camera.rotation.y) * spd;
     MovingCube.position.x -= Math.sin(camera.rotation.y) * spd;
   }
   if (input.down == 1) {
     camera.position.z += Math.cos(camera.rotation.y) * spd;
     camera.position.x += Math.sin(camera.rotation.y) * spd;
-
     MovingCube.position.z += Math.cos(camera.rotation.y) * spd;
     MovingCube.position.x += Math.sin(camera.rotation.y) * spd;
   }
 }
 
-window.addEventListener('keydown', function (e) {
+// ----------------------------
+// Validar límites → restar vidas
+// ----------------------------
+function verificarLimite() {
+  if (
+    MovingCube.position.x > 20 ||
+    MovingCube.position.x < -10 ||
+    MovingCube.position.z > 15 ||
+    MovingCube.position.z < -15
+  ) {
+    lives--;
+    document.getElementById("lives").innerHTML = lives;
+
+    camera.position.set(posX, posY, posZ);
+    MovingCube.position.set(posX, posY, posZ);
+
+    if (lives <= 0) {
+      document.getElementById("lost").style.display = "block";
+      document.getElementById("cointainerOthers").style.display = "none";
+      pauseAudio(x);
+      playAudio(y);
+      
+      // Detener el timer cuando se acaban las vidas
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+  }
+}
+
+// ----------------------------
+function animate() {
+  requestAnimationFrame(animate);
+
+  movePlayer();
+  verificarLimite();
+
+  // --- Movimiento de patos + escalado suave ---
+  if (Ducks.length > 0) {
+    Ducks[0].position.x += 0.01;
+    Ducks[1].position.z -= 0.01;
+    Ducks[2].position.z += 0.01;
+    Ducks[3].position.x -= 0.01;
+
+    // Interpolación exponencial de la escala
+    currentScale += (targetScale - currentScale) * lerpSpeed;
+
+    var scaleVec = new THREE.Vector3(currentScale, currentScale, currentScale);
+    for (var i = 0; i < Ducks.length; i++) {
+      Ducks[i].scale.copy(scaleVec);
+    }
+  }
+
+  renderer.render(scene, camera);
+  sound1.update(camera);
+}
+
+// ----------------------------
+// Eventos de teclado
+// ----------------------------
+window.addEventListener("keydown", function(e) {
+  // Movimiento WASD
   switch (e.keyCode) {
-    case 68:
-      input.right = 1;
-      break;
-    case 65:
-      input.left = 1;
-      break;
-    case 87:
-      input.up = 1;
-      break;
-    case 83:
-      input.down = 1;
-      break;
-    case 27:
-      document.getElementById("blocker").style.display = 'block';
-      break;
+    case 68: input.right = 1; break; // D
+    case 65: input.left  = 1; break; // A
+    case 87: input.up    = 1; break; // W
+    case 83: input.down  = 1; break; // S
+  }
+
+  // Ataque con tecla E (toggle)
+  if (e.key && e.key.toLowerCase() === 'e') {
+    attackDuck = !attackDuck;
+    targetScale = attackDuck ? 0.9 : 0.3;   // 0.9 = triple de 0.3
   }
 });
 
-
-window.addEventListener('keyup', function (e) {
+window.addEventListener("keyup", function(e) {
   switch (e.keyCode) {
-    case 68:
-      input.right = 0;
-      break;
-    case 65:
-      input.left = 0;
-      break;
-    case 87:
-      input.up = 0;
-      break;
-    case 83:
-      input.down = 0;
-      break;
+    case 68: input.right = 0; break;
+    case 65: input.left  = 0; break;
+    case 87: input.up    = 0; break;
+    case 83: input.down  = 0; break;
   }
 });
-// ----------------------------------
-// Funciones llamadas desde el index:
-// ----------------------------------
+
+// ----------------------------
 function go2Play() {
-  document.getElementById('blocker').style.display = 'none';
-  document.getElementById('cointainerOthers').style.display = 'block';
-  playAudio(x);
+  document.getElementById("blocker").style.display = "none";
+  document.getElementById("lost").style.display = "none";
+  document.getElementById("cointainerOthers").style.display = "block";
+
+  lives = 3;
+  attackDuck = false;
+  targetScale = 0.3;
+  currentScale = 0.3;
+  document.getElementById("lives").innerHTML = lives;
+
+  if (camera) camera.position.set(posX, posY, posZ);
+  if (MovingCube) MovingCube.position.set(posX, posY, posZ);
+
+  // Reiniciar el timer correctamente
   initialiseTimer();
+
+  playAudio(x);
 }
 
 function initialiseTimer() {
+  // Limpiar cualquier intervalo anterior para que no se dupliquen
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
   var sec = 0;
   function pad(val) { return val > 9 ? val : "0" + val; }
-
-  setInterval(function () {
+  
+  timerInterval = setInterval(function() {
     document.getElementById("seconds").innerHTML = String(pad(++sec % 60));
     document.getElementById("minutes").innerHTML = String(pad(parseInt(sec / 60, 10)));
   }, 1000);
-}
-
-// ----------------------------------
-// Funciones llamadas desde el index:
-// ----------------------------------
-function createPlayerMove() {
-  var cubeGeometry = new THREE.CubeGeometry(1, 1, 1, 1, 1, 1);
-  var wireMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.0 });
-  MovingCube = new THREE.Mesh(cubeGeometry, wireMaterial);
-  MovingCube.position.set(camera.position.x, camera.position.y, camera.position.z);
-  scene.add(MovingCube);
-}
-
-function createFrontera() {
-  var cubeGeometry = new THREE.CubeGeometry(12, 5, 12, 1, 1, 1);
-  var wireMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff, wireframe: true, transparent: true, opacity: 0.0 });
-  worldWalls = new THREE.Mesh(cubeGeometry, wireMaterial);
-  worldWalls.position.set(5, 0, 0);
-  scene.add(worldWalls);
-  collidableMeshList.push(worldWalls);
-}
-
-function collisionAnimate() {
-
-  var originPoint = MovingCube.position.clone();
-
-  for (var vertexIndex = 0; vertexIndex < MovingCube.geometry.vertices.length; vertexIndex++) {
-    var localVertex = MovingCube.geometry.vertices[vertexIndex].clone();
-    var globalVertex = localVertex.applyMatrix4(MovingCube.matrix);
-    var directionVector = globalVertex.sub(MovingCube.position);
-
-    var ray = new THREE.Raycaster(originPoint, directionVector.clone().normalize());
-    var collisionResults = ray.intersectObjects(collidableMeshList);
-    if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
-      document.getElementById("lives").innerHTML = lives;//'toco, '+ JSON.stringify(collisionResults[0].object.name);//points;
-      camera.position.set(posX, posY, posZ);
-      MovingCube.position.set(posX, posY, posZ);
-      // Aqui disminuir las vidas
-      if (lives == 0) {
-        document.getElementById("lost").style.display = "block";
-        document.getElementById("cointainerOthers").style.display = "none";
-        pauseAudio(x);
-        playAudio(y);
-      }
-    } else {
-      document.getElementById("lives").innerHTML = lives; // 'no toco';  
-    }
-  }
 }

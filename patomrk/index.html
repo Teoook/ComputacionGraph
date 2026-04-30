@@ -28,6 +28,8 @@
     <script src="./src/Sound.js"></script>
     
     <script src="./src/main.js"></script>
+
+    <script src="./src/island.js"></script>
 </head>
 <body onload="start()">
     <canvas id="app"></canvas>
@@ -59,24 +61,29 @@
             <span class="timertext">Lives: </span>  
             <span class="timertext" id="lives"></span>
         </div>
+
+        <!-- Cartel de ataque añadido -->
+        <div style="position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 8px; font-family: sans-serif; z-index: 10;">
+            Presiona <strong>E</strong> para golpear
+        </div>
     </div>
-	<audio id="myAudio">
+
+    <audio id="myAudio">
 		
     </audio>
     <audio id="endGame">
 		
-	</audio>
-	<script>
-		var x = document.getElementById("myAudio"); 
+    </audio>
+    <script>
+        var x = document.getElementById("myAudio"); 
         var y = document.getElementById("endGame");
-		function playAudio(k) { 
+        function playAudio(k) { 
             k.volume = 0.5;
-			k.play(); 
+            k.play(); 
         } 
         function pauseAudio(k) { 
-			k.pause(); 
-		} 
-
+            k.pause(); 
+        } 
     </script>
     
    
